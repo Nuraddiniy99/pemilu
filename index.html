@@ -957,7 +957,7 @@
          */
 
         // --- KONFIGURASI UTAMA ---
-        const GSCRIPT_URL = "https://script.google.com/macros/s/AKfycbw02845WibOFAvarv_GRML0vqR4ZdAF0TGleSOmfNts6Kbfvt6N2rudKSeuCl0EAjyx/exec";
+        const GSCRIPT_URL = "https://script.google.com/macros/s/AKfycbyermMr2h-EckGBAqlETRLarkgft4Pag9hx2TA0aJ3yUiWRhrjVWCjNTkUYzcKZV45v/exec";
 
         // State Global
         let currentManifest = {};
@@ -1543,99 +1543,135 @@
             }
         };
 
-        async function handleExcelImport(event) {
-            event.preventDefault();
-            const file = document.getElementById('voter-excel')?.files[0];
-            if (!file) {
-                showToast("Pilih file Excel terlebih dahulu", "error");
-                return;
-            }
+async function handleExcelImport(event) {
+    event.preventDefault();
+    const fileInput = document.getElementById('voter-excel');
+    const file = fileInput?.files[0];
+    
+    if (!file) {
+        showToast("Pilih file Excel terlebih dahulu", "error");
+        return;
+    }
 
-            showToast("Menganalisis file Excel...", "info");
-            
+    showToast("Menganalisis file Excel...", "info");
+    
+    try {
+        // Gunakan FileReader untuk membaca file sebagai binary string
+        const reader = new FileReader();
+        reader.onload = (e) => {
             try {
-                const base64 = await fileToBase64(file);
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
                 
-                // Gunakan FormData
-                const formData = new FormData();
-                formData.append('action', 'parseExcel');
-                formData.append('file', base64);
+                // Ambil sheet pertama
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
                 
-                const response = await fetch(GSCRIPT_URL, {
-                    method: 'POST',
-                    body: formData  // FormData akan otomatis set multipart/form-data
-                });
+                // Konversi ke JSON, asumsikan baris pertama adalah header
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // Validasi header (baris pertama)
+                const headers = jsonData[0] || [];
+                if (headers[0] !== 'Nama' || headers[1] !== 'Tahun Kedatangan' || headers[2] !== 'Nama Angkatan') {
+                    showToast("Format kolom tidak sesuai. Harus: Nama | Tahun Kedatangan | Nama Angkatan", "error");
+                    return;
                 }
                 
-                const result = await response.json();
-                console.log("Parse result:", result);
-                
-                if (result.status === 'success') {
-                    voterDataPreview = result.data || [];
-                    const previewBody = document.getElementById('tbody-preview-import');
-                    if (previewBody) {
-                        previewBody.innerHTML = '';
-                        
-                        if (voterDataPreview.length === 0) {
-                            previewBody.innerHTML = '<tr><td colspan="3" style="text-align:center">Tidak ada data valid</td></tr>';
-                        } else {
-                            voterDataPreview.forEach(row => {
-                                const tr = document.createElement('tr');
-                                tr.innerHTML = `<td>${row.nama || '-'}</td><td>${row.tahun || '-'}</td><td>${row.angkatan || '-'}</td>`;
-                                previewBody.appendChild(tr);
-                            });
-                        }
+                // Parse data (mulai dari baris kedua, index 1)
+                voterDataPreview = [];
+                for (let i = 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (row[0] && row[1] && row[2]) { // Pastikan semua kolom terisi
+                        voterDataPreview.push({
+                            nama: row[0].toString().trim(),
+                            tahun: row[1].toString().trim(),
+                            angkatan: row[2].toString().trim()
+                        });
                     }
-                    
-                    const importCount = document.getElementById('import-count');
-                    if (importCount) importCount.innerText = voterDataPreview.length;
-                    
-                    openModal('modal-import');
-                    showToast(`${voterDataPreview.length} data siap diimport`, "success");
-                } else {
-                    showToast(result.message || "Gagal memproses file", "error");
                 }
-            } catch (e) {
-                console.error("Excel import error detail:", e);
-                showToast("Gagal memproses file Excel: " + e.message, "error");
-            }
-        }
-
-        window.confirmImportExcel = async function() {
-            const btn = document.getElementById('btn-confirm-import');
-            if (!btn) return;
-            
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-
-            try {
-                const response = await fetch(GSCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'confirmImport',
-                        voters: voterDataPreview
-                    })
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    showToast(`${result.count || 0} Pemilih berhasil ditambahkan!`);
-                    closeModal('modal-import');
-                    await fetchVoters();
-                    await fetchDashboardStats();
-                } else {
-                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                
+                // Tampilkan preview di modal
+                const previewBody = document.getElementById('tbody-preview-import');
+                if (previewBody) {
+                    previewBody.innerHTML = '';
+                    if (voterDataPreview.length === 0) {
+                        previewBody.innerHTML = '<tr><td colspan="3" style="text-align:center">Tidak ada data valid</td></tr>';
+                    } else {
+                        voterDataPreview.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${row.nama}</td><td>${row.tahun}</td><td>${row.angkatan}</td>`;
+                            previewBody.appendChild(tr);
+                        });
+                    }
                 }
-            } catch (e) {
-                console.error("Confirm import error:", e);
-                showToast("Gagal menyimpan data massal", "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-check"></i> Konfirmasi & Generate Kode';
+                
+                document.getElementById('import-count').innerText = voterDataPreview.length;
+                openModal('modal-import');
+                showToast(`${voterDataPreview.length} data siap diimport`, "success");
+                
+            } catch (parseError) {
+                console.error("Parse error:", parseError);
+                showToast("Gagal membaca file Excel: " + parseError.message, "error");
             }
         };
+        
+        reader.readAsArrayBuffer(file);
+        
+    } catch (e) {
+        console.error("Excel import error detail:", e);
+        showToast("Gagal memproses file Excel: " + e.message, "error");
+    }
+}
+
+window.confirmImportExcel = async function() {
+    const btn = document.getElementById('btn-confirm-import');
+    if (!btn) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+    try {
+        // 🔴 KIRIM SEBAGAI APPLICATION/X-WWW-FORM-URLENCODED
+        const formBody = new URLSearchParams();
+        formBody.append('action', 'confirmImport');
+        // Ubah array voters menjadi string JSON
+        formBody.append('voters', JSON.stringify(voterDataPreview));
+
+        const response = await fetch(GSCRIPT_URL, {
+            method: 'POST',
+            // Penting: jangan set header Content-Type manual!
+            // Biarkan browser mengatur ke 'application/x-www-form-urlencoded'
+            body: formBody
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            showToast(`${result.count || 0} Pemilih berhasil ditambahkan!`);
+            closeModal('modal-import');
+            
+            // Reset form
+            document.getElementById('voter-excel').value = '';
+            document.getElementById('name-voter-excel').innerText = 'Upload File .xlsx';
+            
+            // Refresh data pemilih
+            await fetchVoters();
+            await fetchDashboardStats();
+        } else {
+            showToast("Gagal: " + (result.message || "Unknown error"), "error");
+        }
+    } catch (e) {
+        console.error("Confirm import error:", e);
+        showToast("Gagal menyimpan data massal: " + e.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Konfirmasi & Generate Kode';
+    }
+};
 
         // --- 5. DASHBOARD STATS & UTILS ---
 
@@ -1817,5 +1853,8 @@
             }
         };
 </script>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
 </body>
 </html>
