@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#22c55e" id="meta-theme-color">
+    <title>E-Vote - Halaman Pemilih</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* CSS Variabel (Bisa di-override oleh JS via manifest.json) */
+        :root {
+            --primary-color: #22c55e;
+            --primary-hover: #16a34a;
+            --bg-gradient-start: #d1fae5;
+            --bg-gradient-end: #bbf7d0;
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.15);
+            --text-dark: #1f2937;
+            --text-muted: #4b5563;
+            --danger: #ef4444;
+            --white: #ffffff;
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Ubah ke flex-start agar scroll di mobile natural */
+        }
+
+        /* Mobile App Container Constraint */
+        .app-container {
+            width: 100%;
+            max-width: 480px; /* Ukuran max smartphone */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        /* Banner & Header Area */
+        .header-banner {
+            width: 100%;
+            height: 180px;
+            background-color: var(--glass-bg);
+            background-size: cover;
+            background-position: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-content {
+            position: relative;
+            margin-top: -50px; /* Overlap ke banner */
+            padding: 0 20px;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid var(--white);
+            background: var(--white);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+            margin-bottom: 5px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Glassmorphism Panel Utilities */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            padding: 25px 20px;
+            margin: 20px;
+        }
+
+        /* Sections & Animations */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Inputs */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-kode {
+            width: 100%;
+            padding: 18px;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            border: 2px solid rgba(255,255,255,0.8);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.6);
+            color: var(--text-dark);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-kode:focus {
+            background: var(--white);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+        }
+
+        .input-kode::placeholder {
+            font-size: 16px;
+            letter-spacing: normal;
+            font-weight: 400;
+            color: #9ca3af;
+        }
+
+        /* Buttons Mobile Friendly */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s active;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Alert Box */
+        .alert {
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+        .alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block;}
+        .alert.info { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; display: block;}
+
+        /* Kandidat List (Radio Cards) */
+        .kandidat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .kandidat-card {
+            position: relative;
+            display: block;
+            cursor: pointer;
+        }
+
+        .kandidat-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .card-content {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.7);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            gap: 15px;
+        }
+
+        /* Dynamic Border based on selection */
+        .kandidat-card input[type="radio"]:checked + .card-content {
+            background: var(--white);
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .kandidat-foto {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            object-fit: cover;
+            border: 2px solid var(--white);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .kandidat-info {
+            flex: 1;
+        }
+
+        .kandidat-no {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--white);
+            background: var(--primary-color);
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .kandidat-nama {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .kandidat-slogan {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .radio-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .radio-check i {
+            font-size: 12px;
+            color: var(--white);
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .kandidat-card input[type="radio"]:checked + .card-content .radio-check {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .kandidat-card input[type="radio"]:checked + .card-content .radio-check i {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Modal Konfirmasi */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: var(--white);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 24px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: #dcfce7;
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            margin: 0 auto 15px auto;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background: #f3f4f6;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        .btn-confirm {
+            background: var(--primary-color);
+            color: var(--white);
+            flex: 1;
+        }
+
+        /* Loading Screen UI */
+        #global-loader {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-gradient-start);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.5);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="global-loader">
+        <div class="spinner"></div>
+        <p style="font-weight: 500; color: var(--text-dark);">Menyiapkan Bilik Suara...</p>
+    </div>
+
+    <div class="app-container">
+        
+        <div class="header-banner" id="ui-banner" style="background-image: url('https://via.placeholder.com/480x180/22c55e/ffffff?text=Banner+Pemilu');"></div>
+        <div class="header-content">
+            <img src="https://via.placeholder.com/100" alt="Logo" class="logo-img" id="ui-logo">
+            <h1 class="page-title" id="ui-title">Sistem E-Vote</h1>
+            <p class="page-subtitle" id="ui-subtitle">Gunakan hak suara Anda dengan bijak</p>
+        </div>
+
+        <div id="section-login" class="view-section active glass-panel">
+            <h3 style="text-align: center; margin-bottom: 20px; font-size: 18px;">Verifikasi Pemilih</h3>
+            
+            <div id="login-alert" class="alert info">Silakan masukkan 8 karakter kode unik Anda.</div>
+
+            <div class="input-group">
+                <input type="text" id="input-kode" class="input-kode" maxlength="8" placeholder="••••••••" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+            </div>
+
+            <button class="btn btn-primary" id="btn-verify" onclick="verifyCode()">
+                Verifikasi Kode <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div id="section-voting" class="view-section">
+            <div class="glass-panel" style="margin-bottom: 10px; padding: 15px 20px;">
+                <p style="font-size: 13px; color: var(--text-muted); text-align: center;">Selamat datang, <strong id="voter-name" style="color: var(--text-dark);">Nama Pemilih</strong></p>
+            </div>
+
+            <div class="glass-panel" style="padding-top: 20px;">
+                <h3 style="font-size: 16px; margin-bottom: 5px;">Kertas Suara Digital</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Pilih salah satu kandidat di bawah ini, lalu tekan tombol Kirim Suara.</p>
+
+                <form id="form-voting" onsubmit="preventSubmit(event)">
+                    <div class="kandidat-list" id="kandidat-container">
+                        <div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Memuat kandidat...</div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" id="btn-submit-vote" onclick="triggerVoteConfirmation()" style="margin-top: 25px;" disabled>
+                        <i class="fas fa-paper-plane"></i> Kirim Suara Saya
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fas fa-question"></i></div>
+            <h3 class="modal-title">Konfirmasi Pilihan</h3>
+            <p class="modal-desc">Anda akan memberikan suara untuk:<br><strong id="confirm-kandidat-name" style="font-size: 18px; color: var(--primary-color); display: block; margin-top: 10px;">Nama Kandidat</strong><br><span style="font-size: 12px; color: #ef4444;">Peringatan: Pilihan tidak dapat diubah setelah dikirim.</span></p>
+            
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn btn-confirm" id="btn-final-vote" onclick="executeVote()">Ya, Kirim Suara</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-success">
+        <div class="modal-box" style="text-align: center;">
+            <div class="modal-icon" style="background: #22c55e; color: white;"><i class="fas fa-check"></i></div>
+            <h3 class="modal-title">Terima Kasih!</h3>
+            <p class="modal-desc">Suara Anda telah berhasil direkam ke dalam sistem database secara aman.</p>
+            <button class="btn btn-primary" onclick="logout()">Selesai & Keluar</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * PEMILIH.JS - Logika Bilik Suara Digital
+         * Fokus: Kecepatan Mobile, Keamanan Sekali Pakai, & UX Smooth
+         */
+
+        // --- KONFIGURASI ENDPOINT ---
+        const GSCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXDfa9yCydT6OVNpKeLUFdWKQibpoK1j52t7Zk47k7H4WdIMUQFxbJzKr2EFvh79pA/exec"; // Samakan dengan index.js
+        let currentVoter = { nama: "", kode: "" };
+        let candidatesData = [];
+
+        // --- 1. INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tampilkan loader saat fetch manifest
+            showLoading(true);
+            await loadAppConfig();
+            showLoading(false);
+        });
+
+        /**
+         * Mengambil data dari manifest.json untuk mengatur tampilan & daftar kandidat
+         */
+        async function loadAppConfig() {
+            try {
+                // Tips: Kita panggil GScript untuk ambil manifest agar tidak kena CORS GDrive
+                const response = await fetch(`${GSCRIPT_URL}?action=getManifest`);
+                const manifest = await response.json();
+
+                // 1. Update UI (Banner, Logo, Title)
+                if (manifest.ui?.pemilih) {
+                    document.getElementById('ui-title').innerText = manifest.ui.pemilih.title;
+                    document.getElementById('ui-logo').src = manifest.ui.pemilih.logo_url;
+                    document.getElementById('ui-banner').style.backgroundImage = `url('${manifest.ui.pemilih.banner_url}')`;
+                }
+
+                // 2. Terapkan Warna Aksen Global
+                if (manifest.config?.primary_color) {
+                    document.documentElement.style.setProperty('--primary-color', manifest.config.primary_color);
+                    document.getElementById('meta-theme-color').content = manifest.config.primary_color;
+                }
+
+                // 3. Simpan data kandidat untuk nanti di-render
+                candidatesData = manifest.candidates || [];
+
+                // 4. Cek apakah pemilu ditutup
+                if (!manifest.config?.pemilu_open) {
+                    setAlert("Sistem ditutup. Pemungutan suara belum dimulai atau sudah berakhir.", "error");
+                    document.getElementById('input-kode').disabled = true;
+                    document.getElementById('btn-verify').disabled = true;
+                }
+
+            } catch (error) {
+                console.error("Gagal memuat konfigurasi:", error);
+                setAlert("Gagal terhubung ke server. Coba muat ulang halaman.", "error");
+            }
+        }
+
+        // --- 2. VERIFIKASI KODE ---
+
+        async function verifyCode() {
+            const kodeInput = document.getElementById('input-kode').value.trim().toUpperCase();
+            const btn = document.getElementById('btn-verify');
+
+            if (kodeInput.length < 8) {
+                return setAlert("Kode unik harus 8 karakter.", "error");
+            }
+
+            // UI Loading State
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+            setAlert("Sedang mengecek kode...", "info");
+
+            try {
+                const response = await fetch(`${GSCRIPT_URL}?action=verifyVoter&kode=${kodeInput}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Simpan data pemilih ke state
+                    currentVoter.nama = result.nama;
+                    currentVoter.kode = kodeInput;
+
+                    // Render kandidat dan pindah halaman
+                    renderCandidates();
+                    document.getElementById('voter-name').innerText = result.nama;
+                    switchSection('voting');
+                } else {
+                    setAlert(result.message, "error");
+                }
+            } catch (error) {
+                setAlert("Terjadi kesalahan jaringan. Coba lagi.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Verifikasi Kode <i class="fas fa-arrow-right"></i>';
+            }
+        }
+
+        // --- 3. RENDERING BILIK SUARA ---
+
+        function renderCandidates() {
+            const container = document.getElementById('kandidat-container');
+            container.innerHTML = ''; // Clear loading
+
+            if (candidatesData.length === 0) {
+                container.innerHTML = '<p style="text-align:center;">Data kandidat tidak tersedia.</p>';
+                return;
+            }
+
+            candidatesData.forEach(can => {
+                const card = `
+                    <label class="kandidat-card">
+                        <input type="radio" name="pilihan_kandidat" value="${can.nama}" data-nomor="${can.nomor_urut}">
+                        <div class="card-content">
+                            <img src="${can.foto_url}" class="kandidat-foto" onerror="this.src='https://via.placeholder.com/150'">
+                            <div class="kandidat-info">
+                                <span class="kandidat-no" style="background: ${can.warna_hex || 'var(--primary-color)'}">#0${can.nomor_urut}</span>
+                                <h4 class="kandidat-nama">${can.nama}</h4>
+                                <p class="kandidat-slogan">"${can.slogan}"</p>
+                            </div>
+                            <div class="radio-check">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
+                    </label>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // --- 4. VOTING PROCESS ---
+
+        function triggerVoteConfirmation() {
+            const terpilih = document.querySelector('input[name="pilihan_kandidat"]:checked');
+            if (!terpilih) return;
+
+            const namaKandidat = terpilih.value;
+            const nomorKandidat = terpilih.getAttribute('data-nomor');
+
+            document.getElementById('confirm-kandidat-name').innerText = `(${nomorKandidat}) ${namaKandidat}`;
+            document.getElementById('modal-confirm').classList.add('active');
+        }
+
+        async function executeVote() {
+            const terpilih = document.querySelector('input[name="pilihan_kandidat"]:checked').value;
+            const btn = document.getElementById('btn-final-vote');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+            try {
+                const payload = {
+                    action: 'submitVote',
+                    kode: currentVoter.kode,
+                    kandidat: terpilih
+                };
+
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    document.getElementById('modal-confirm').classList.remove('active');
+                    document.getElementById('modal-success').classList.add('active');
+                } else {
+                    alert("Gagal mengirim suara: " + result.message);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Ya, Kirim Suara';
+                }
+            } catch (error) {
+                alert("Kesalahan koneksi saat mengirim suara.");
+                btn.disabled = false;
+            }
+        }
+
+        // --- 5. HELPER UTILS ---
+
+        function switchSection(targetId) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('section-' + targetId).classList.add('active');
+            
+            // Auto scroll ke atas saat pindah section
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setAlert(msg, type) {
+            const alertBox = document.getElementById('login-alert');
+            alertBox.innerText = msg;
+            alertBox.className = 'alert ' + type;
+        }
+
+        function showLoading(isVisible) {
+            const loader = document.getElementById('global-loader');
+            if (isVisible) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+            } else {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
+        }
+
+        function logout() {
+            // Reset state dan balik ke login
+            currentVoter = { nama: "", kode: "" };
+            document.getElementById('input-kode').value = '';
+            document.getElementById('form-voting').reset();
+            document.getElementById('btn-submit-vote').disabled = true;
+            document.getElementById('modal-success').classList.remove('active');
+            
+            setAlert("Silakan masukkan 8 karakter kode unik Anda.", "info");
+            switchSection('login');
+        }
+
+
+        // Sembunyikan global loader setelah aset DOM siap (sebenarnya akan diatur ulang di pemilih.js nanti)
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('global-loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('global-loader').style.display = 'none', 500);
+            }, 800);
+        };
+
+        // Format input kode otomatis huruf besar
+        document.getElementById('input-kode').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        // Mencegah form reload bawaan browser
+        function preventSubmit(e) {
+            e.preventDefault();
+        }
+
+        // Fungsi kontrol UI Modal
+        function closeModal() {
+            document.getElementById('modal-confirm').classList.remove('active');
+        }
+
+        // Enable tombol submit jika ada radio yang dipilih (dipanggil dari pemilih.js nanti, tapi disiapkan handler UI-nya)
+        document.getElementById('kandidat-container').addEventListener('change', function(e) {
+            if(e.target.name === 'pilihan_kandidat') {
+                document.getElementById('btn-submit-vote').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

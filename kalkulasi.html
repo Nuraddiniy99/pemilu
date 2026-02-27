@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Count - Hasil Real-Time Pemilu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* =========================================
+           CSS VARIABLES & RESET
+           ========================================= */
+        :root {
+            --primary: #22c55e;
+            --primary-light: #4ade80;
+            --bg-start: #d1fae5;
+            --bg-end: #bbf7d0;
+            --glass: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #064e3b;
+            --text-muted: #374151;
+            --white: #ffffff;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* =========================================
+           LAYOUT & CONTAINERS
+           ========================================= */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        /* =========================================
+           HEADER SECTION
+           ========================================= */
+        .header {
+            padding: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background: var(--white);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.15);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        /* =========================================
+           STATISTICS GRID
+           ========================================= */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 18px;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+        }
+
+        .stat-data h2 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-data p {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* =========================================
+           CHART SECTIONS
+           ========================================= */
+        .main-results {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+        }
+
+        .chart-container {
+            padding: 30px;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chart-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .chart-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        canvas {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* =========================================
+           CANDIDATE TABLE/LIST
+           ========================================= */
+        .candidate-table {
+            padding: 30px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            border-color: var(--primary);
+            background: var(--white);
+            transform: translateX(10px);
+        }
+
+        .list-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+
+        .list-info {
+            flex-grow: 1;
+        }
+
+        .list-info h4 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .list-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .list-percent {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* =========================================
+           FOOTER & REFRESH LOGIC
+           ========================================= */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .countdown-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .countdown-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* =========================================
+           MOBILE RESPONSIVENESS
+           ========================================= */
+        @media (max-width: 992px) {
+            .main-results {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 10px; }
+            .header { padding: 20px 15px; }
+            .stat-item { padding: 15px; }
+            .main-results { gap: 15px; }
+            .chart-container { padding: 20px; min-height: 350px; }
+            .list-item:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <header class="glass-card header">
+            <div class="logo-box">
+                <img id="app-logo" src="https://via.placeholder.com/80" alt="Logo">
+            </div>
+            <h1 id="app-title">Memuat Hasil...</h1>
+            <div class="live-indicator">
+                <div class="dot"></div>
+                HASIL REAL-TIME
+            </div>
+        </header>
+
+        <section class="stats-grid">
+            <div class="glass-card stat-item">
+                <div class="icon-circle"><i class="fas fa-users"></i></div>
+                <div class="stat-data">
+                    <h2 id="total-dpt">0</h2>
+                    <p>Total Pemilih (DPT)</p>
+                </div>
+            </div>
+            <div class="glass-card stat-item">
+                <div class="icon-circle" style="color: #3b82f6;"><i class="fas fa-vote-yea"></i></div>
+                <div class="stat-data">
+                    <h2 id="total-voted">0</h2>
+                    <p>Suara Masuk</p>
+                </div>
+            </div>
+            <div class="glass-card stat-item">
+                <div class="icon-circle" style="color: #ef4444;"><i class="fas fa-user-slash"></i></div>
+                <div class="stat-data">
+                    <h2 id="total-golput">0</h2>
+                    <p>Belum Memilih / Golput</p>
+                </div>
+            </div>
+        </section>
+
+        <main class="main-results">
+            <div class="glass-card chart-container">
+                <div class="chart-header">
+                    <h3>Penyebaran Suara</h3>
+                    <i class="fas fa-chart-pie" style="color: var(--primary);"></i>
+                </div>
+                <canvas id="pieChart"></canvas>
+            </div>
+
+            <div class="glass-card chart-container">
+                <div class="chart-header">
+                    <h3>Perolehan Kandidat</h3>
+                    <i class="fas fa-chart-bar" style="color: #3b82f6;"></i>
+                </div>
+                <canvas id="barChart"></canvas>
+                
+                <div style="width: 100%; margin-top: 30px;" id="candidate-list-container">
+                    </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p><i class="fas fa-clock"></i> Terakhir diperbarui: <span id="last-update">-</span></p>
+            <p>Refresh otomatis dalam <span id="timer-text">0</span> detik</p>
+            <div class="countdown-bar">
+                <div id="countdown-fill" class="countdown-fill"></div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        /**
+         * CONFIGURATION & STATE
+         */
+        const GSCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXDfa9yCydT6OVNpKeLUFdWKQibpoK1j52t7Zk47k7H4WdIMUQFxbJzKr2EFvh79pA/exec"; // Ganti dengan URL GScript Web App
+        let refreshInterval = 300; // Default 5 menit (dalam detik)
+        let timeLeft = refreshInterval;
+        let charts = {};
+
+        /**
+         * INITIALIZATION
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeSystem();
+            startCountdown();
+        });
+
+        async function initializeSystem() {
+            console.log("Initializing data...");
+            await fetchManifest();
+            await refreshData();
+        }
+
+        /**
+         * FETCH MANIFEST (Untuk UI & Interval)
+         */
+        async function fetchManifest() {
+            try {
+                const response = await fetch(`${GSCRIPT_URL}?action=getManifest`);
+                const manifest = await response.json();
+                
+                // Update UI elements
+                document.getElementById('app-title').innerText = manifest.ui?.kalkulasi?.title || "Hasil Pemilihan";
+                document.getElementById('app-logo').src = manifest.ui?.kalkulasi?.logo_url || "";
+                
+                // Update Refresh Interval if exists
+                if(manifest.config?.refresh_interval) {
+                    refreshInterval = manifest.config.refresh_interval / 1000;
+                    timeLeft = refreshInterval;
+                }
+
+                // Global Color
+                if(manifest.config?.primary_color) {
+                    document.documentElement.style.setProperty('--primary', manifest.config.primary_color);
+                }
+            } catch (e) {
+                console.warn("Manifest fetch failed, using defaults.");
+                document.getElementById('app-title').innerText = "Live Count Pemilihan";
+            }
+        }
+
+        /**
+         * CORE DATA FETCHING
+         */
+        async function refreshData() {
+            try {
+                const response = await fetch(`${GSCRIPT_URL}?action=getResults`);
+                const data = await response.json();
+
+                // 1. Update Stats
+                animateCounter('total-dpt', data.totalDPT);
+                animateCounter('total-voted', data.totalVoted);
+                animateCounter('total-golput', data.totalDPT - data.totalVoted);
+
+                // 2. Prepare Chart Data
+                const labels = data.candidates.map(c => c.nama);
+                const votes = data.candidates.map(c => c.votes);
+                const colors = data.candidates.map(c => c.warna_hex || '#22c55e');
+
+                // 3. Update/Create Charts
+                updateCharts(labels, votes, colors);
+
+                // 4. Update Candidate List Table
+                updateCandidateList(data.candidates, data.totalVoted);
+
+                // 5. Update Timestamp
+                document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
+
+            } catch (e) {
+                console.error("Data refresh failed:", e);
+            }
+        }
+
+        /**
+         * CHART.JS LOGIC
+         */
+        function updateCharts(labels, data, colors) {
+            // PIE CHART
+            if (charts.pie) charts.pie.destroy();
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            charts.pie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                        tooltip: { backgroundColor: 'rgba(255,255,255,0.9)', titleColor: '#000', bodyColor: '#000', borderColor: '#ddd', borderWidth: 1 }
+                    },
+                    animation: { animateRotate: true, animateScale: true, duration: 2000 }
+                }
+            });
+
+            // BAR CHART
+            if (charts.bar) charts.bar.destroy();
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            charts.bar = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Perolehan Suara',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 10,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } },
+                    animation: { duration: 1500, easing: 'easeOutBounce' }
+                }
+            });
+        }
+
+        /**
+         * CANDIDATE LIST UI
+         */
+        function updateCandidateList(candidates, total) {
+            const container = document.getElementById('candidate-list-container');
+            container.innerHTML = '';
+
+            candidates.sort((a,b) => b.votes - a.votes).forEach(can => {
+                const percent = total > 0 ? ((can.votes / total) * 100).toFixed(1) : 0;
+                container.innerHTML += `
+                    <div class="list-item">
+                        <img src="${can.foto_url}" class="list-img" onerror="this.src='https://via.placeholder.com/50'">
+                        <div class="list-info">
+                            <h4>${can.nama}</h4>
+                            <p>No. Urut ${can.nomor_urut} • ${can.votes} Suara</p>
+                        </div>
+                        <div class="list-percent">${percent}%</div>
+                    </div>
+                `;
+            });
+        }
+
+        /**
+         * TIMER & COUNTDOWN LOGIC
+         */
+        function startCountdown() {
+            setInterval(() => {
+                timeLeft--;
+                const fillWidth = (timeLeft / refreshInterval) * 100;
+                
+                document.getElementById('timer-text').innerText = timeLeft;
+                document.getElementById('countdown-fill').style.width = fillWidth + "%";
+
+                if (timeLeft <= 0) {
+                    timeLeft = refreshInterval;
+                    refreshData();
+                }
+            }, 1000);
+        }
+
+        /**
+         * UTILS: Number Animation
+         */
+        function animateCounter(id, target) {
+            let current = 0;
+            const element = document.getElementById(id);
+            const step = Math.ceil(target / 50);
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    element.innerText = target.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.innerText = current.toLocaleString();
+                }
+            }, 30);
+        }
+    </script>
+</body>
+</html>

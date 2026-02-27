@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Sistem Pemilu Visioner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Variabel Warna & Tema Default */
+        :root {
+            --primary-color: #22c55e;
+            --primary-hover: #16a34a;
+            --bg-gradient-start: #d1fae5;
+            --bg-gradient-end: #bbf7d0;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(34, 197, 94, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.15);
+            --text-dark: #1f2937;
+            --text-muted: #4b5563;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --white: #ffffff;
+        }
+
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            display: flex;
+            overflow-x: hidden;
+            /* Desktop focus: mematikan scroll horizontal */
+        }
+
+        /* Glassmorphism Utility Class */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* Sidebar Layout (Desktop Fixed) */
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 40px);
+            margin: 20px;
+            padding: 30px 20px;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand h2 {
+            font-size: 22px;
+            color: var(--primary-color);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .brand p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--primary-color);
+            border: 1px solid var(--glass-border);
+            transform: translateX(5px);
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: 320px; /* Lebar sidebar + margin */
+            padding: 20px;
+            width: calc(100% - 320px);
+            min-height: 100vh;
+        }
+
+        /* Top Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        /* Section Visibility Toggle */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Grid Cards untuk Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .stat-info h3 {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Form & Inputs Standard */
+        .form-panel {
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-panel h3 {
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        input[type="text"], 
+        input[type="number"], 
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.6);
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus, 
+        select:focus {
+            background: rgba(255,255,255,0.9);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        .helper-text {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* File Input Styling */
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .file-upload-label:hover {
+            background: rgba(255,255,255,0.8);
+        }
+
+        .file-upload-label i {
+            font-size: 30px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        /* Tab Sub-menu untuk Pengaturan Tampilan */
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+            padding-bottom: 15px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--white);
+            color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Color Picker Spesifik */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 50px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 0;
+            background: transparent;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Tabel Modern Glassmorphic */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: rgba(255,255,255,0.5);
+            border-radius: 15px;
+            padding: 1px; /* border hack */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255,255,255,0.7);
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+            border-bottom: 2px solid rgba(255,255,255,0.9);
+        }
+
+        th:first-child { border-top-left-radius: 15px; }
+        th:last-child { border-top-right-radius: 15px; }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.4);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.8);
+        }
+
+        .kandidat-color-box {
+            width: 25px;
+            height: 25px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .kandidat-foto-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-active { background: #dbeafe; color: #2563eb; }
+        .badge-voted { background: #dcfce7; color: #16a34a; }
+
+        /* Modal / Popup */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar glass-panel">
+        <div class="brand">
+            <h2>E-VOTE</h2>
+            <p>Sistem Pemilu Visioner</p>
+        </div>
+        
+        <div class="nav-item active" onclick="switchSection('dashboard')">
+            <i class="fas fa-home"></i> Dashboard Utama
+        </div>
+        <div class="nav-item" onclick="switchSection('pengaturan')">
+            <i class="fas fa-paint-brush"></i> Pengaturan Tampilan
+        </div>
+        <div class="nav-item" onclick="switchSection('kandidat')">
+            <i class="fas fa-users"></i> Manajemen Kandidat
+        </div>
+        <div class="nav-item" onclick="switchSection('pemilih')">
+            <i class="fas fa-id-card"></i> Data Pemilih
+        </div>
+        <div class="nav-item" onclick="switchSection('logs')">
+            <i class="fas fa-history"></i> System Logs
+        </div>
+
+        <div style="margin-top: auto;">
+            <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="exportData()">
+                <i class="fas fa-download"></i> Export CSV Data
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        
+        <header class="top-header glass-panel">
+            <div class="header-title">
+                <h1 id="page-title">Dashboard Utama</h1>
+            </div>
+            <div class="system-status">
+                <div class="status-dot"></div>
+                <span id="koneksi-status">Backend Connected (GScript)</span>
+            </div>
+        </header>
+
+        <section id="section-dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-dpt">0</h3>
+                        <p>Total DPT (Pemilih)</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon" style="color: #3b82f6;"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-voted">0</h3>
+                        <p>Sudah Memilih</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon" style="color: #ef4444;"><i class="fas fa-user-times"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-golput">0</h3>
+                        <p>Golput / Belum</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon" style="color: #eab308;"><i class="fas fa-user-tie"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-kandidat">0</h3>
+                        <p>Kandidat Terdaftar</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-panel glass-panel">
+                <h3>Aksi Cepat & Status Pemilu</h3>
+                <div class="form-row" style="align-items: center;">
+                    <p style="flex: 1; font-size: 14px; color: var(--text-muted);">
+                        Gunakan tombol di bawah untuk membuka atau menutup akses voting di halaman <code>pemilih.html</code>. 
+                        Data akan disimpan di <code>manifest.json</code>.
+                    </p>
+                    <button class="btn btn-primary" id="btn-toggle-pemilu" onclick="togglePemiluStatus()">
+                        <i class="fas fa-door-open"></i> Buka Akses Pemilu
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="section-pengaturan" class="content-section">
+            <div class="form-panel glass-panel">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchSettingsTab('tab-index')">Halaman Admin</button>
+                    <button class="tab-btn" onclick="switchSettingsTab('tab-pemilih')">Halaman Pemilih</button>
+                    <button class="tab-btn" onclick="switchSettingsTab('tab-kalkulasi')">Halaman Kalkulasi</button>
+                    <button class="tab-btn" onclick="switchSettingsTab('tab-global')">Warna Global</button>
+                </div>
+                <!-- Tab Halaman Admin (index.html) -->
+                <div id="tab-index" class="tab-content">
+                    <h3>Konfigurasi UI - Halaman Admin</h3>
+                    <form id="form-setting-admin" onsubmit="submitSettings(event, 'admin')">
+                        <div class="form-group">
+                            <label>Judul Dashboard</label>
+                            <input type="text" id="set-judul-admin" maxlength="100" placeholder="Contoh: Admin Dashboard Pemilu 2026">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Upload Logo Admin</label>
+                                <label class="file-upload-label" for="upload-logo-admin">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="name-logo-admin">Pilih File Logo (.jpg/.png)</span>
+                                </label>
+                                <input type="file" id="upload-logo-admin" accept="image/png, image/jpeg" onchange="updateFileName(this, 'name-logo-admin')">
+                            </div>
+                            <div class="form-group">
+                                <label>Warna Sidebar</label>
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <input type="color" id="set-color-sidebar" value="#22c55e">
+                                    <input type="text" id="set-color-sidebar-text" value="#22c55e" style="width: 150px;" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Simpan Pengaturan Admin
+                        </button>
+                    </form>
+                </div>
+                <div id="tab-pemilih" class="tab-content active">
+                    <h3>Konfigurasi UI - pemilih.html</h3>
+                    <form id="form-setting-pemilih" onsubmit="submitSettings(event, 'pemilih')">
+                        <div class="form-group">
+                            <label>Judul Halaman (Max 100 char)</label>
+                            <input type="text" id="set-judul-pemilih" maxlength="100" placeholder="Contoh: Pemilihan Ketua 2026">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Upload Logo (Rasio 1:1, Max 2MB)</label>
+                                <label class="file-upload-label" for="upload-logo-pemilih">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="name-logo-pemilih">Pilih File Logo (.jpg/.png)</span>
+                                </label>
+                                <input type="file" id="upload-logo-pemilih" accept="image/png, image/jpeg" onchange="updateFileName(this, 'name-logo-pemilih')">
+                            </div>
+                            <div class="form-group">
+                                <label>Upload Banner Latar (Rasio 16:9, Max 2MB)</label>
+                                <label class="file-upload-label" for="upload-banner-pemilih">
+                                    <i class="fas fa-image"></i>
+                                    <span id="name-banner-pemilih">Pilih File Banner (.jpg/.png)</span>
+                                </label>
+                                <input type="file" id="upload-banner-pemilih" accept="image/png, image/jpeg" onchange="updateFileName(this, 'name-banner-pemilih')">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Simpan ke Manifest
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tab Halaman Kalkulasi (kalkulasi.html) -->
+                <div id="tab-kalkulasi" class="tab-content">
+                    <h3>Konfigurasi UI - Halaman Kalkulasi</h3>
+                    <form id="form-setting-kalkulasi" onsubmit="submitSettings(event, 'kalkulasi')">
+                        <div class="form-group">
+                            <label>Judul Halaman Live Count</label>
+                            <input type="text" id="set-judul-kalkulasi" maxlength="100" placeholder="Contoh: Live Count Pemilu 2026">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Upload Logo (Rasio 1:1)</label>
+                                <label class="file-upload-label" for="upload-logo-kalkulasi">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="name-logo-kalkulasi">Pilih File Logo (.jpg/.png)</span>
+                                </label>
+                                <input type="file" id="upload-logo-kalkulasi" accept="image/png, image/jpeg" onchange="updateFileName(this, 'name-logo-kalkulasi')">
+                            </div>
+                            <div class="form-group">
+                                <label>Tampilkan Opsi</label>
+                                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" id="show-percentage" checked> Tampilkan Persentase
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" id="show-total-voters" checked> Tampilkan Total Pemilih
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Simpan Pengaturan Kalkulasi
+                        </button>
+                    </form>
+                </div>
+
+                <div id="tab-global" class="tab-content">
+                    <h3>Pengaturan Visual Tema</h3>
+                    <form id="form-setting-global" onsubmit="submitSettings(event, 'global')">
+                        <div class="form-row" style="align-items: center;">
+                            <div class="form-group">
+                                <label>Warna Aksen Default (Hex)</label>
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <input type="color" id="set-color-primary" value="#22c55e">
+                                    <input type="text" id="set-color-text" value="#22c55e" style="width: 150px;" readonly>
+                                </div>
+                                <span class="helper-text">Ini akan mengubah seluruh aksen tombol dan border.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Interval Refresh Kalkulasi (Detik)</label>
+                                <input type="number" id="set-refresh-interval" value="1800" min="60" max="3600">
+                                <span class="helper-text">Default 1800 detik (30 Menit). Untuk performa, minimal 60.</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Terapkan Tema
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="section-kandidat" class="content-section">
+            <div class="form-panel glass-panel">
+                <h3>Tambah Kandidat Baru <span style="font-size: 12px; color:var(--danger); font-weight:normal;">(Maksimal 5 Kandidat)</span></h3>
+                <form id="form-add-kandidat" onsubmit="submitKandidat(event)">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 0.3;">
+                            <label>Nomor Urut</label>
+                            <select id="kandidat-no" required>
+                                <option value="" disabled selected>Pilih...</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                                <option value="3">03</option>
+                                <option value="4">04</option>
+                                <option value="5">05</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Kandidat</label>
+                            <input type="text" id="kandidat-nama" style="text-transform: capitalize;" required placeholder="Nama Lengkap">
+                        </div>
+                        <div class="form-group" style="flex: 0.4;">
+                            <label>Warna Chart</label>
+                            <input type="color" id="kandidat-warna" value="#3b82f6" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Slogan / Visi Singkat (Max 50 char)</label>
+                        <input type="text" id="kandidat-slogan" maxlength="50" required placeholder="Contoh: Bersama Membangun Komunitas...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto Kandidat (Max 2MB, Upload auto-rename ke Drive)</label>
+                        <label class="file-upload-label" for="kandidat-foto">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="name-kandidat-foto">Pilih Pas Foto 1:1 (.jpg/.png)</span>
+                        </label>
+                        <input type="file" id="kandidat-foto" accept="image/png, image/jpeg" required onchange="updateFileName(this, 'name-kandidat-foto')">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btn-submit-kandidat">
+                        <i class="fas fa-plus"></i> Tambah Kandidat
+                    </button>
+                </form>
+            </div>
+
+            <div class="form-panel glass-panel" style="padding: 20px;">
+                <h3 style="padding: 10px;">Daftar Kandidat Terdaftar (Manifest.json)</h3>
+                <div class="table-container">
+                    <table id="table-kandidat">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Foto</th>
+                                <th>Nama Lengkap</th>
+                                <th>Slogan</th>
+                                <th>Warna</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-kandidat">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Mengambil data dari manifest.json...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="section-pemilih" class="content-section">
+            <div class="form-row">
+                <div class="form-panel glass-panel" style="flex: 1;">
+                    <h3>Tambah Pemilih (Manual)</h3>
+                    <form id="form-add-pemilih" onsubmit="submitPemilihManual(event)">
+                        <div class="form-group">
+                            <label>Nama Lengkap</label>
+                            <input type="text" id="voter-nama" required placeholder="Nama Pemilih">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tahun Kedatangan</label>
+                                <input type="number" id="voter-tahun" required placeholder="Ex: 2023">
+                            </div>
+                            <div class="form-group">
+                                <label>Nama Angkatan</label>
+                                <input type="text" id="voter-angkatan" required placeholder="Ex: Alpha">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-user-plus"></i> Generate Kode & Simpan
+                        </button>
+                    </form>
+                </div>
+
+                <div class="form-panel glass-panel" style="flex: 1;">
+                    <h3>Import Data Massal (Excel .xlsx)</h3>
+                    <p style="font-size: 13px; margin-bottom: 15px; color: var(--text-muted);">
+                        Format Kolom Wajib: <b>Nama</b> | <b>Tahun Kedatangan</b> | <b>Nama Angkatan</b>.<br>
+                        Kode unik 8 karakter akan otomatis di-generate oleh GScript.
+                    </p>
+                    <form id="form-import-excel" onsubmit="handleExcelImport(event)">
+                        <div class="form-group">
+                            <label class="file-upload-label" for="voter-excel" style="padding: 40px;">
+                                <i class="fas fa-file-excel" style="font-size: 40px; color: #10b981;"></i>
+                                <span id="name-voter-excel" style="margin-top: 10px;">Upload File .xlsx</span>
+                            </label>
+                            <input type="file" id="voter-excel" accept=".xlsx" required onchange="updateFileName(this, 'name-voter-excel')">
+                        </div>
+                        <button type="submit" class="btn btn-outline" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-upload"></i> Parsing & Recheck Data
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="form-panel glass-panel" style="padding: 20px;">
+                <!-- Di section-pemilih, ganti bagian header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+                    <h3>Daftar Pemilih & Kode Akses</h3>
+                    <div>
+                        <button class="btn btn-outline" onclick="fetchVoters()" style="margin-right:10px;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteAllVoters()">
+                            <i class="fas fa-trash-alt"></i> Hapus Semua
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="table-voters">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Angkatan (Tahun)</th>
+                                <th>Kode Unik (8 Char)</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-voters">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Memuat dari Spreadsheet via GScript...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-logs" class="content-section">
+            <div class="form-panel glass-panel">
+                <h3>Log Aktivitas Sistem</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Aksi / Event</th>
+                                <th>Detail</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-logs">
+                            <tr>
+                                <td>-</td>
+                                <td>UI Initialization</td>
+                                <td>Menunggu koneksi fetch GScript</td>
+                                <td><span class="badge badge-active">OK</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="modal-overlay" id="modal-import">
+        <div class="modal-content glass-panel" style="padding: 30px;">
+            <div class="modal-header">
+                <h3>Recheck Data Import Excel</h3>
+                <button class="close-modal" onclick="closeModal('modal-import')"><i class="fas fa-times"></i></button>
+            </div>
+            <p style="font-size: 14px; margin-bottom: 20px; color: var(--text-muted);">
+                Berikut adalah <span id="import-count">0</span> baris data yang berhasil di-parsing. Silakan konfirmasi untuk meng-generate kode unik dan menyimpannya ke Spreadsheet.
+            </p>
+            <div class="table-container" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                <table style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Tahun</th>
+                            <th>Angkatan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-preview-import">
+                        </tbody>
+                </table>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                <button class="btn btn-outline" onclick="closeModal('modal-import')">Batal</button>
+                <button class="btn btn-primary" id="btn-confirm-import" onclick="confirmImportExcel()">
+                    <i class="fas fa-check"></i> Konfirmasi & Generate Kode
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+        /**
+         * INDEX.JS - Core Logic for Admin Dashboard
+         * REVISED VERSION - Fully compatible with GScript backend
+         */
+
+        // --- KONFIGURASI UTAMA ---
+        const GSCRIPT_URL = "https://script.google.com/macros/s/AKfycbw02845WibOFAvarv_GRML0vqR4ZdAF0TGleSOmfNts6Kbfvt6N2rudKSeuCl0EAjyx/exec";
+
+        // State Global
+        let currentManifest = {};
+        let voterDataPreview = []; // Temporary storage untuk import Excel
+
+        // --- 1. INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("System Initialized...");
+            initDashboard();
+        });
+
+        async function initDashboard() {
+            updateStatusIndicator("Connecting...", "orange");
+            try {
+                await fetchManifest();
+                await fetchDashboardStats();
+                await fetchCandidates();
+                await fetchVoters(); // Tambahkan ini untuk memuat data pemilih
+                updateStatusIndicator("Backend Connected", "#22c55e");
+            } catch (error) {
+                console.error("Init Error:", error);
+                updateStatusIndicator("Connection Failed", "#ef4444");
+            }
+        }
+
+        // Tambahkan fungsi ini
+        function applyAdminTheme(manifest) {
+            if (!manifest) return;
+            
+            // Ubah warna primary
+            if (manifest.config?.primary_color) {
+                document.documentElement.style.setProperty('--primary-color', manifest.config.primary_color);
+                document.documentElement.style.setProperty('--primary-hover', manifest.config.primary_color);
+                
+                // Update status dot
+                const dot = document.querySelector('.status-dot');
+                if (dot) {
+                    dot.style.backgroundColor = manifest.config.primary_color;
+                }
+            }
+            
+            // Ubah judul dashboard
+            if (manifest.ui?.admin?.title) {
+                const pageTitle = document.getElementById('page-title');
+                if (pageTitle && window.location.href.includes('admin')) {
+                    pageTitle.innerText = manifest.ui.admin.title;
+                }
+            }
+            
+            // Ubah logo jika ada
+            if (manifest.ui?.admin?.logo_url) {
+                // Jika ada elemen logo di admin, update
+                const logoImg = document.querySelector('.brand img');
+                if (logoImg) {
+                    logoImg.src = manifest.ui.admin.logo_url;
+                }
+            }
+        }
+
+        // --- 2. MANIFEST & SETTINGS LOGIC ---
+
+        async function fetchManifest() {
+            try {
+                const response = await fetch(`${GSCRIPT_URL}?action=getManifest`);
+                const data = await response.json();
+                currentManifest = data;
+                
+                // Isi data untuk tab admin
+                const judulAdmin = document.getElementById('set-judul-admin');
+                if (judulAdmin) judulAdmin.value = data.ui?.admin?.title || "Admin Dashboard";
+
+                const colorSidebar = document.getElementById('set-color-sidebar');
+                const colorSidebarText = document.getElementById('set-color-sidebar-text');
+                if (colorSidebar) {
+                    colorSidebar.value = data.ui?.admin?.sidebar_color || data.config?.primary_color || "#22c55e";
+                    if (colorSidebarText) colorSidebarText.value = colorSidebar.value;
+                }
+
+                // Isi data untuk tab kalkulasi
+                const judulKalkulasi = document.getElementById('set-judul-kalkulasi');
+                if (judulKalkulasi) judulKalkulasi.value = data.ui?.kalkulasi?.title || "Live Count Perolehan Suara";
+
+                const showPercentage = document.getElementById('show-percentage');
+                if (showPercentage) showPercentage.checked = data.ui?.kalkulasi?.show_percentage !== false;
+
+                const showTotalVoters = document.getElementById('show-total-voters');
+                if (showTotalVoters) showTotalVoters.checked = data.ui?.kalkulasi?.show_total_voters !== false;
+                // Populate UI Pengaturan
+                const judulPemilih = document.getElementById('set-judul-pemilih');
+                if (judulPemilih) judulPemilih.value = data.ui?.pemilih?.title || "";
+                
+                const colorPrimary = document.getElementById('set-color-primary');
+                const colorText = document.getElementById('set-color-text');
+                if (colorPrimary) {
+                    colorPrimary.value = data.config?.primary_color || "#22c55e";
+                    if (colorText) colorText.value = data.config?.primary_color || "#22c55e";
+                }
+                
+                const refreshInterval = document.getElementById('set-refresh-interval');
+                if (refreshInterval) {
+                    refreshInterval.value = (data.config?.refresh_interval / 1000) || 1800;
+                }
+                
+                // Update Status Tombol Pemilu
+                const btnToggle = document.getElementById('btn-toggle-pemilu');
+                if (btnToggle && data.config?.pemilu_open) {
+                    btnToggle.innerHTML = '<i class="fas fa-door-closed"></i> Tutup Akses Pemilu';
+                    btnToggle.classList.remove('btn-primary');
+                    btnToggle.classList.add('btn-danger');
+                } else if (btnToggle) {
+                    btnToggle.innerHTML = '<i class="fas fa-door-open"></i> Buka Akses Pemilu';
+                    btnToggle.classList.remove('btn-danger');
+                    btnToggle.classList.add('btn-primary');
+                }
+
+                applyAdminTheme(data);
+
+            } catch (e) {
+                console.error("Manifest fetch failed:", e);
+                showToast("Gagal memuat manifest.json", "error");
+            }
+        }
+
+        async function submitSettings(event, type) {
+            event.preventDefault();
+            const btn = event.submitter;
+            if (!btn) return;
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+            btn.disabled = true;
+
+            // Gunakan FormData
+            const formData = new FormData();
+            formData.append('action', 'updateSettings');
+            formData.append('type', type);
+
+            if (type === 'pemilih') {
+                const titleInput = document.getElementById('set-judul-pemilih');
+                if (titleInput) formData.append('title', titleInput.value);
+                
+                const logo = document.getElementById('upload-logo-pemilih')?.files[0];
+                const banner = document.getElementById('upload-banner-pemilih')?.files[0];
+                
+                if (logo) formData.append('logo', await fileToBase64(logo));
+                if (banner) formData.append('banner', await fileToBase64(banner));
+                
+            } else if (type === 'admin') {
+                const titleInput = document.getElementById('set-judul-admin');
+                if (titleInput) formData.append('title', titleInput.value);
+                
+                const colorSidebar = document.getElementById('set-color-sidebar');
+                if (colorSidebar) formData.append('sidebar_color', colorSidebar.value);
+                
+                const logo = document.getElementById('upload-logo-admin')?.files[0];
+                if (logo) formData.append('logo', await fileToBase64(logo));
+                
+            } else if (type === 'kalkulasi') {
+                const titleInput = document.getElementById('set-judul-kalkulasi');
+                if (titleInput) formData.append('title', titleInput.value);
+                
+                const showPercentage = document.getElementById('show-percentage');
+                const showTotalVoters = document.getElementById('show-total-voters');
+                
+                if (showPercentage) formData.append('show_percentage', showPercentage.checked);
+                if (showTotalVoters) formData.append('show_total_voters', showTotalVoters.checked);
+                
+                const logo = document.getElementById('upload-logo-kalkulasi')?.files[0];
+                if (logo) formData.append('logo', await fileToBase64(logo));
+                
+            } else if (type === 'global') {
+                const colorPrimary = document.getElementById('set-color-primary');
+                const refreshInterval = document.getElementById('set-refresh-interval');
+                
+                if (colorPrimary) formData.append('primary_color', colorPrimary.value);
+                if (refreshInterval) formData.append('refresh_interval', refreshInterval.value * 1000);
+            }
+
+            try {
+                // 🔴 PERBAIKAN: Jangan set header Content-Type, biarkan browser yang set
+                const resp = await fetch(GSCRIPT_URL, { 
+                    method: 'POST',
+                    body: formData
+                    // Hapus headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                
+                // Cek response
+                const text = await resp.text(); // Ambil sebagai text dulu untuk debug
+                console.log("Raw response:", text);
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    console.error("JSON parse error:", e);
+                    showToast("Server error: " + text.substring(0, 100), "error");
+                    return;
+                }
+                
+                if (result.status === 'success') {
+                    showToast("Pengaturan berhasil diperbarui!");
+                    await fetchManifest();
+                    applyAdminTheme(currentManifest); // Terapkan tema
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Settings error:", e);
+                showToast("Gagal menyimpan pengaturan: " + e.message, "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- 3. KANDIDAT LOGIC (CRUD) ---
+
+        async function fetchCandidates() {
+            const tbody = document.getElementById('tbody-kandidat');
+            if (!tbody) return;
+            
+            try {
+                const resp = await fetch(`${GSCRIPT_URL}?action=getCandidates`);
+                const result = await resp.json();
+                
+                // Handle response format baru: { status: "success", data: [...] }
+                const candidates = result.data || result || [];
+                
+                const dashKandidat = document.getElementById('dash-kandidat');
+                if (dashKandidat) dashKandidat.innerText = candidates.length;
+                
+                tbody.innerHTML = '';
+
+                const btnSubmit = document.getElementById('btn-submit-kandidat');
+                if (btnSubmit) {
+                    if (candidates.length >= 5) {
+                        btnSubmit.disabled = true;
+                        btnSubmit.innerHTML = "Maksimal 5 Kandidat Tercapai";
+                    } else {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<i class="fas fa-plus"></i> Tambah Kandidat';
+                    }
+                }
+
+                if (candidates.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Belum ada kandidat. Silakan tambah kandidat.</td></tr>';
+                    return;
+                }
+
+                // Ganti bagian ini di fungsi fetchCandidates
+                candidates.forEach(can => {
+                    // Tambahkan validasi URL foto
+                    let fotoUrl = can.foto_url || 'https://via.placeholder.com/40';
+                    // Pastikan URL tidak undefined/null
+                    if (!fotoUrl || fotoUrl === '') {
+                        fotoUrl = 'https://via.placeholder.com/40';
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><b>${can.nomor_urut}</b></td>
+                        <td><img src="${fotoUrl}" class="kandidat-foto-preview" 
+                            onerror="this.src='https://via.placeholder.com/40'; this.onerror=null;" 
+                            alt="Foto ${can.nama}"></td>
+                        <td>${can.nama || '-'}</td>
+                        <td><small>${can.slogan || '-'}</small></td>
+                        <td><div class="kandidat-color-box" style="background:${can.warna_hex || '#22c55e'}"></div></td>
+                        <td>
+                            <button class="btn btn-outline" onclick="editKandidat('${can.id}')" style="padding:5px 10px; margin-right:5px;">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteKandidat('${can.id}')" style="padding:5px 10px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (e) {
+                console.error("Fetch candidates error:", e);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat data kandidat</td></tr>';
+            }
+        }
+
+        window.editKandidat = function(id) {
+            const candidate = currentManifest.candidates.find(c => c.id === id);
+            if (!candidate) return;
+            
+            // Isi form dengan data kandidat
+            document.getElementById('kandidat-no').value = candidate.nomor_urut;
+            document.getElementById('kandidat-nama').value = candidate.nama;
+            document.getElementById('kandidat-warna').value = candidate.warna_hex;
+            document.getElementById('kandidat-slogan').value = candidate.slogan;
+            
+            // Ubah tombol submit menjadi update
+            const btn = document.getElementById('btn-submit-kandidat');
+            btn.innerHTML = '<i class="fas fa-save"></i> Update Kandidat';
+            btn.setAttribute('data-edit-id', id);
+            
+            // Scroll ke form
+            document.getElementById('form-add-kandidat').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // Fungsi delete kandidat (perlu diimplementasikan di GScript)
+        window.deleteKandidat = async function(id) {
+            if (!confirm("Hapus kandidat ini? Tindakan ini tidak dapat dibatalkan.")) return;
+            
+            try {
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'deleteCandidate',
+                        id: id
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast("Kandidat berhasil dihapus");
+                    await fetchCandidates();
+                    await fetchManifest();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Delete error:", e);
+                showToast("Gagal menghapus kandidat", "error");
+            }
+        };
+
+        async function submitKandidat(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btn-submit-kandidat');
+            const editId = btn.getAttribute('data-edit-id');
+            if (!btn) return;
+            
+            const originalText = btn.innerHTML;
+            
+            const fotoFile = document.getElementById('kandidat-foto')?.files[0];
+            if (!fotoFile) {
+                return showToast("Pilih foto kandidat terlebih dahulu", "error");
+            }
+            
+            if (fotoFile.size > 2 * 1024 * 1024) {
+                return showToast("Ukuran foto maksimal 2MB", "error");
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengupload...';
+            btn.disabled = true;
+
+            const nomorUrut = document.getElementById('kandidat-no')?.value;
+            const nama = document.getElementById('kandidat-nama')?.value;
+            const warna = document.getElementById('kandidat-warna')?.value;
+            const slogan = document.getElementById('kandidat-slogan')?.value;
+
+            if (!nomorUrut || !nama || !warna || !slogan) {
+                showToast("Semua field harus diisi", "error");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const fotoBase64 = await fileToBase64(fotoFile);
+                const payload = {
+                    action: editId ? 'updateCandidate' : 'addCandidate',
+                    id: editId,
+                    nomor_urut: nomorUrut,
+                    nama: nama,
+                    warna_hex: warna,
+                    slogan: slogan,
+                    foto: fotoBase64 // Langsung pakai variable yang sudah ada
+                };
+
+                if (fotoFile) {
+                    payload.foto = await fileToBase64(fotoFile);
+                }
+
+                const resp = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await resp.json();
+                if (result.status === 'success') {
+                    showToast("Kandidat berhasil ditambahkan");
+                    document.getElementById('form-add-kandidat')?.reset();
+                    const nameLabel = document.getElementById('name-kandidat-foto');
+                    if (nameLabel) nameLabel.innerText = "Pilih Pas Foto 1:1 (.jpg/.png)";
+                    await fetchCandidates();
+                    await fetchManifest();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Submit candidate error:", e);
+                showToast("Terjadi kesalahan sistem", "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- 4. PEMILIH & EXCEL LOGIC ---
+
+        async function fetchVoters() {
+            const tbody = document.getElementById('tbody-voters');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center"><i class="fas fa-spinner fa-spin"></i> Mengambil data...</td></tr>';
+            
+            try {
+                const resp = await fetch(`${GSCRIPT_URL}?action=getVoters`);
+                const result = await resp.json();
+                
+                // Handle response format baru
+                const voters = result.data || result || [];
+                
+                // Update stats
+                if (voters.length > 0) {
+                    const totalDPT = voters.length;
+                    const totalVoted = voters.filter(v => v.status === 'voted').length;
+                    
+                    const dashDpt = document.getElementById('dash-dpt');
+                    const dashVoted = document.getElementById('dash-voted');
+                    const dashGolput = document.getElementById('dash-golput');
+                    
+                    if (dashDpt) dashDpt.innerText = totalDPT;
+                    if (dashVoted) dashVoted.innerText = totalVoted;
+                    if (dashGolput) dashGolput.innerText = totalDPT - totalVoted;
+                }
+                
+                tbody.innerHTML = '';
+                
+                if (voters.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Belum ada data pemilih</td></tr>';
+                    return;
+                }
+                
+                // Ganti bagian render voters di fungsi fetchVoters
+                voters.forEach(v => {
+                    const statusClass = v.status === 'voted' ? 'badge-voted' : 'badge-active';
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${v.nama || '-'}</td>
+                        <td>${v.angkatan || '-'} (${v.tahun || '-'})</td>
+                        <td><code style="background:#fff; padding:3px 8px; border-radius:5px; border:1px solid #ddd;">${v.kode || '-'}</code></td>
+                        <td>
+                            <select class="status-select" data-kode="${v.kode}" onchange="updateVoterStatus('${v.kode}', this.value)" style="padding:5px; border-radius:5px;">
+                                <option value="active" ${v.status === 'active' ? 'selected' : ''}>Active</option>
+                                <option value="voted" ${v.status === 'voted' ? 'selected' : ''}>Voted</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-outline" onclick="copyToClipboard('${v.kode || ''}')" title="Salin Kode" style="padding:5px 10px; margin-right:5px;">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteVoter('${v.kode}')" title="Hapus" style="padding:5px 10px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (e) {
+                console.error("Fetch voters error:", e);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat data pemilih</td></tr>';
+            }
+        }
+
+        // Fungsi update status pemilih
+        window.updateVoterStatus = async function(kode, status) {
+            if (!confirm(`Ubah status pemilih dengan kode ${kode} menjadi ${status}?`)) return;
+            
+            try {
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateVoterStatus',
+                        kode: kode,
+                        status: status
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast("Status berhasil diupdate");
+                    fetchVoters();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Update status error:", e);
+                showToast("Gagal mengupdate status", "error");
+            }
+        };
+
+        // Fungsi hapus pemilih
+        window.deleteVoter = async function(kode) {
+            if (!confirm(`Hapus pemilih dengan kode ${kode}? Tindakan ini tidak dapat dibatalkan.`)) return;
+            
+            try {
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'deleteVoter',
+                        kode: kode
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast("Pemilih berhasil dihapus");
+                    fetchVoters();
+                    fetchDashboardStats();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Delete voter error:", e);
+                showToast("Gagal menghapus pemilih", "error");
+            }
+        };
+
+        // Fungsi hapus semua pemilih
+        window.deleteAllVoters = async function() {
+            if (!confirm("HAPUS SEMUA PEMILIH? Tindakan ini tidak dapat dibatalkan!")) return;
+            if (!confirm("KONFIRMASI LAGI: Yakin hapus semua data pemilih?")) return;
+            
+            try {
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'deleteAllVoters'
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast(`Semua pemilih berhasil dihapus (${result.count} data)`);
+                    fetchVoters();
+                    fetchDashboardStats();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Delete all error:", e);
+                showToast("Gagal menghapus semua pemilih", "error");
+            }
+        };
+
+        // Fungsi submit pemilih manual
+        window.submitPemilihManual = async function(event) {
+            event.preventDefault();
+            
+            const nama = document.getElementById('voter-nama')?.value;
+            const tahun = document.getElementById('voter-tahun')?.value;
+            const angkatan = document.getElementById('voter-angkatan')?.value;
+            
+            if (!nama || !tahun || !angkatan) {
+                showToast("Semua field harus diisi", "error");
+                return;
+            }
+            
+            try {
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'addSingleVoter',
+                        nama: nama,
+                        tahun: tahun,
+                        angkatan: angkatan
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast("Pemilih berhasil ditambahkan. Kode: " + result.kode);
+                    document.getElementById('form-add-pemilih')?.reset();
+                    await fetchVoters();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Add voter error:", e);
+                showToast("Gagal menambah pemilih", "error");
+            }
+        };
+
+        async function handleExcelImport(event) {
+            event.preventDefault();
+            const file = document.getElementById('voter-excel')?.files[0];
+            if (!file) {
+                showToast("Pilih file Excel terlebih dahulu", "error");
+                return;
+            }
+
+            showToast("Menganalisis file Excel...", "info");
+            
+            try {
+                const base64 = await fileToBase64(file);
+                
+                // Gunakan FormData
+                const formData = new FormData();
+                formData.append('action', 'parseExcel');
+                formData.append('file', base64);
+                
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: formData  // FormData akan otomatis set multipart/form-data
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log("Parse result:", result);
+                
+                if (result.status === 'success') {
+                    voterDataPreview = result.data || [];
+                    const previewBody = document.getElementById('tbody-preview-import');
+                    if (previewBody) {
+                        previewBody.innerHTML = '';
+                        
+                        if (voterDataPreview.length === 0) {
+                            previewBody.innerHTML = '<tr><td colspan="3" style="text-align:center">Tidak ada data valid</td></tr>';
+                        } else {
+                            voterDataPreview.forEach(row => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `<td>${row.nama || '-'}</td><td>${row.tahun || '-'}</td><td>${row.angkatan || '-'}</td>`;
+                                previewBody.appendChild(tr);
+                            });
+                        }
+                    }
+                    
+                    const importCount = document.getElementById('import-count');
+                    if (importCount) importCount.innerText = voterDataPreview.length;
+                    
+                    openModal('modal-import');
+                    showToast(`${voterDataPreview.length} data siap diimport`, "success");
+                } else {
+                    showToast(result.message || "Gagal memproses file", "error");
+                }
+            } catch (e) {
+                console.error("Excel import error detail:", e);
+                showToast("Gagal memproses file Excel: " + e.message, "error");
+            }
+        }
+
+        window.confirmImportExcel = async function() {
+            const btn = document.getElementById('btn-confirm-import');
+            if (!btn) return;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+            try {
+                const response = await fetch(GSCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'confirmImport',
+                        voters: voterDataPreview
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showToast(`${result.count || 0} Pemilih berhasil ditambahkan!`);
+                    closeModal('modal-import');
+                    await fetchVoters();
+                    await fetchDashboardStats();
+                } else {
+                    showToast("Gagal: " + (result.message || "Unknown error"), "error");
+                }
+            } catch (e) {
+                console.error("Confirm import error:", e);
+                showToast("Gagal menyimpan data massal", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Konfirmasi & Generate Kode';
+            }
+        };
+
+        // --- 5. DASHBOARD STATS & UTILS ---
+
+        async function fetchDashboardStats() {
+            try {
+                const resp = await fetch(`${GSCRIPT_URL}?action=getStats`);
+                const stats = await resp.json();
+                
+                const dashDpt = document.getElementById('dash-dpt');
+                const dashVoted = document.getElementById('dash-voted');
+                const dashGolput = document.getElementById('dash-golput');
+                
+                if (dashDpt) dashDpt.innerText = stats.totalDPT || 0;
+                if (dashVoted) dashVoted.innerText = stats.totalVoted || 0;
+                if (dashGolput) dashGolput.innerText = (stats.totalDPT - stats.totalVoted) || 0;
+            } catch (e) {
+                console.warn("Could not fetch stats:", e);
+            }
+        }
+
+        // Fungsi export data
+        window.exportData = async function() {
+            try {
+                const response = await fetch(`${GSCRIPT_URL}?action=exportData`);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `data_pemilu_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error("Export error:", e);
+                showToast("Gagal export data", "error");
+            }
+        };
+
+        function updateStatusIndicator(text, color) {
+            const statusText = document.getElementById('koneksi-status');
+            const dot = document.querySelector('.status-dot');
+            if (statusText) statusText.innerText = text;
+            if (dot) {
+                dot.style.backgroundColor = color;
+                dot.style.boxShadow = `0 0 10px ${color}`;
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function showToast(message, type = "success") {
+            // Gunakan alert sementara, bisa diganti dengan custom toast
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+
+        window.copyToClipboard = function(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Kode berhasil disalin!");
+            }).catch(() => {
+                showToast("Gagal menyalin kode", "error");
+            });
+        };
+
+        window.togglePemiluStatus = async function() {
+            if (!currentManifest.config) return;
+            
+            const newState = !currentManifest.config.pemilu_open;
+            const confirmMsg = newState ? "Buka akses pemilihan sekarang?" : "Tutup akses pemilihan?";
+            
+            if (confirm(confirmMsg)) {
+                try {
+                    const resp = await fetch(GSCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'togglePemilu', 
+                            state: newState 
+                        })
+                    });
+                    const res = await resp.json();
+                    if(res.status === 'success') {
+                        showToast("Status Pemilu diperbarui");
+                        await fetchManifest();
+                    } else {
+                        showToast("Gagal: " + (res.message || "Unknown error"), "error");
+                    }
+                } catch (e) {
+                    console.error("Toggle error:", e);
+                    showToast("Gagal mengubah status", "error");
+                }
+            }
+        };
+
+        // Fungsi ganti halaman menu (FIXED)
+        window.switchSection = function(sectionId) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            const section = document.getElementById('section-' + sectionId);
+            if (section) section.classList.add('active');
+            
+            // Cari nav item yang sesuai dan beri class active
+            const navItems = document.querySelectorAll('.nav-item');
+            for (let nav of navItems) {
+                if (nav.getAttribute('onclick')?.includes(sectionId)) {
+                    nav.classList.add('active');
+                    break;
+                }
+            }
+            
+            // Update Title
+            const titles = {
+                'dashboard': 'Dashboard Utama',
+                'pengaturan': 'Pengaturan Tampilan Sistem',
+                'kandidat': 'Manajemen Kandidat',
+                'pemilih': 'Data & Kode Pemilih',
+                'logs': 'Sistem Logs'
+            };
+            const pageTitle = document.getElementById('page-title');
+            if (pageTitle) pageTitle.innerText = titles[sectionId] || 'Dashboard';
+        };
+
+        // Fungsi ganti sub-tab pengaturan (FIXED)
+        window.switchSettingsTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            const tab = document.getElementById(tabId);
+            if (tab) tab.classList.add('active');
+            
+            // Cari tombol yang sesuai dan beri class active
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            for (let btn of tabBtns) {
+                if (btn.getAttribute('onclick')?.includes(tabId)) {
+                    btn.classList.add('active');
+                    break;
+                }
+            }
+        };
+
+        // Fungsi update label file input
+        window.updateFileName = function(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (input?.files && input.files[0] && label) {
+                label.innerText = input.files[0].name;
+                label.style.color = "var(--primary-color)";
+                label.style.fontWeight = "600";
+            }
+        };
+
+        // Fungsi kontrol Modal (FIXED)
+        window.openModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('active');
+        };
+        
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove('active');
+        };
+
+        // Load data pemilih saat halaman pemilih diaktifkan
+        const originalSwitchSection = window.switchSection;
+        window.switchSection = function(sectionId) {
+            originalSwitchSection(sectionId);
+            if (sectionId === 'pemilih') {
+                fetchVoters();
+            } else if (sectionId === 'kandidat') {
+                fetchCandidates();
+            } else if (sectionId === 'dashboard') {
+                fetchDashboardStats();
+            }
+        };
+</script>
+</body>
+</html>
